@@ -29,4 +29,15 @@ class ArticleSerializer(serializers.Serializer):
         instance.update_date = validated_data.get('update_date', instance.update_date)
         instance.save()
         return instance
+    
+    #custom validation
+    def validate(self, data): #object level
+        if data["title"] == data["description"]:
+            raise serializers.ValidationError("Title and description must not be the same")
+        return data
+
+    def validate_title(self, value):
+        if len(value) < 10:
+            raise serializers.ValidationError(f"Title must be at least 10 characters. You entered {len(value)} characters")
+        return value
         
