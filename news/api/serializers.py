@@ -1,7 +1,45 @@
 from rest_framework import serializers
 from news.models import Article
 
-class ArticleSerializer(serializers.Serializer):
+from datetime import datetime
+from datetime import date
+from django.utils.timesince import timesince
+class ArticleSerializer(serializers.ModelSerializer):
+    
+    #serializer field'ındaki key kısmı bu class sayesinde manipüle edebiliyoruz.
+    time_since_pub = serializers.SerializerMethodField()
+    class Meta:
+        model = Article
+
+        #bütün alanları getirir
+        fields = "__all__"
+
+        #sadece bu alanları getirir
+        #fields = ["author", "title", "text"]
+
+        #exlude ise o alanlar harici getirir
+        #exclude = ["author", "title", "text"]
+
+        read_only_fields = ["id", " create_date", "update_date"]
+
+    #Serializer field kısmına value ekleyebiliyoruz
+    def get_time_since_pub(self, object):
+        now = datetime.now()
+        pub_date = object.published
+        if object.active == True:
+            time_delta = timesince(pub_date, now) #yayınlanma tarihinden bugüne kadar geçen süreyi hesaplıyor timesince sayesinde
+            return time_delta
+        else:
+            return "it is not active"
+
+    def validate_published(self, time_value):
+        today = date.today()
+        if time_value > today:
+            raise serializers.ValidationError("published date can't be greater than today")
+        return time_value
+
+### STANDART SERIALIZER ###
+class ArticleDefaultSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     author = serializers.CharField()
     title = serializers.CharField()
